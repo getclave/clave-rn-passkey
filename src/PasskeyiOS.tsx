@@ -82,6 +82,7 @@ export class PasskeyiOS {
       const response = await NativePasskey.authenticate(
         request.rpId,
         request.challenge,
+        request.allowCredentials?.map((credential) => credential.id),
         withSecurityKey
       );
       return this.handleNativeAuthenticationResult(response);
