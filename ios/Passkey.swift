@@ -115,9 +115,7 @@ class Passkey: NSObject {
                     let credentials = allowedCredentials.compactMap { Data(base64Encoded: $0) }
                     authRequest.allowedCredentials = credentials.map {
                         ASAuthorizationPlatformPublicKeyCredentialDescriptor(
-                            credentialID: $0,
-                            transports: ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport
-                                .allSupported)
+                            credentialID: $0)
                     }
                 }
                 authController = ASAuthorizationController(authorizationRequests: [authRequest])
