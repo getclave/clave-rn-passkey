@@ -82,7 +82,8 @@ class Passkey: NSObject {
 
     @objc(authenticate:withChallenge:withCredentials:withSecurityKey:withResolver:withRejecter:)
     func authenticate(
-        _ identifier: String, withChallenge challenge: String, withCredentials allowedCredentials: [String], withSecurityKey securityKey: Bool,
+        _ identifier: String, withChallenge challenge: String,
+        withCredentials allowedCredentials: [String], withSecurityKey securityKey: Bool,
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock)
     {
         // Convert challenge to correct type
@@ -109,10 +110,14 @@ class Passkey: NSObject {
                     relyingPartyIdentifier: identifier)
                 let authRequest = platformProvider.createCredentialAssertionRequest(
                     challenge: challengeData)
+                print(allowedCredentials)
                 if allowedCredentials.count > 0 {
                     let credentials = allowedCredentials.compactMap { Data(base64Encoded: $0) }
                     authRequest.allowedCredentials = credentials.map {
-                        ASAuthorizationPlatformPublicKeyCredentialDescriptor(credentialID: $0)
+                        ASAuthorizationPlatformPublicKeyCredentialDescriptor(
+                            credentialID: $0,
+                            transports: ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport
+                                .allSupported)
                     }
                 }
                 authController = ASAuthorizationController(authorizationRequests: [authRequest])
