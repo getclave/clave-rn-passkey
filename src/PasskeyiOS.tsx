@@ -6,6 +6,7 @@ import type {
 } from './Passkey';
 import { handleNativeError } from './PasskeyError';
 import { NativePasskey } from './NativePasskey';
+import base64 from 'react-native-base64';
 
 export class PasskeyiOS {
   /**
@@ -82,7 +83,9 @@ export class PasskeyiOS {
       const response = await NativePasskey.authenticate(
         request.rpId,
         request.challenge,
-        request.allowCredentials?.map((credential) => credential.id),
+        request.allowCredentials?.map((credential) =>
+          base64.encode(credential.id)
+        ),
         withSecurityKey
       );
       return this.handleNativeAuthenticationResult(response);

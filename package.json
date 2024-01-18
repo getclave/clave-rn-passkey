@@ -1,6 +1,6 @@
 {
   "name": "clave-passkey",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Passkey implementation for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -59,6 +59,7 @@
     "@types/jest": "^28.1.2",
     "@types/react": "~17.0.21",
     "@types/react-native": "0.68.0",
+    "@types/react-native-base64": "^0.2.2",
     "commitlint": "^17.0.2",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^8.5.0",
@@ -155,5 +156,8 @@
         }
       ]
     ]
+  },
+  "dependencies": {
+    "react-native-base64": "^0.2.1"
   }
 }
