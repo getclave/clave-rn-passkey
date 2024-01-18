@@ -82,7 +82,7 @@ class Passkey: NSObject {
 
     @objc(authenticate:withChallenge:withCredentials:withSecurityKey:withResolver:withRejecter:)
     func authenticate(
-        _ identifier: String, challenge: String, _ allowedCredentials: [Data], securityKey: Bool,
+        _ identifier: String, withChallenge challenge: String, withCredentials allowedCredentials: [Data], withSecurityKey securityKey: Bool,
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock)
     {
         // Convert challenge to correct type

@@ -13,7 +13,7 @@ RCT_EXTERN_METHOD(register:(NSString)identifier
 
 RCT_EXTERN_METHOD(authenticate:(NSString)identifier
                   withChallenge:(NSString)challenge
-                  withCredentials:(Data)allowedCredentials
+                  withCredentials:(NSArray<NSData *> *)allowedCredentials
                   withSecurityKey:(BOOL) securityKey
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject);
