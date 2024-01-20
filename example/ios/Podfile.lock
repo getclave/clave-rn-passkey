@@ -302,7 +302,7 @@ PODS:
   - React-jsinspector (0.70.3)
   - React-logger (0.70.3):
     - glog
-  - react-native-passkey (2.1.1):
+  - react-native-passkey (1.0.8):
     - React-Core
   - React-perflogger (0.70.3)
   - React-RCTActionSheet (0.70.3):
@@ -562,7 +562,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 7e2e1772ef7b97168c880eeaf3749d8c145ffd6e
   React-jsinspector: 0553c9fe7218e1f127be070bd5a4d2fc19fb8190
   React-logger: cffcc09e8aba8a3014be8d18da7f922802e9f19e
-  react-native-passkey: 29ff814a83dfd4311478498e71a801dce68043ac
+  react-native-passkey: 785dbc7eced646442e6dda60cc9c496e4763a1f3
   React-perflogger: 082b4293f0b3914ff41da35a6c06ac4490fcbcc8
   React-RCTActionSheet: 83da3030deb5dea54b398129f56540a44e64d3ae
   React-RCTAnimation: bac3a4f4c0436554d9f7fbb1352a0cdcb1fb0f1c
@@ -581,4 +581,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 2fd993598c5bb13ab307c03e09b03dd37911af8d
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.14.2

@@ -3,7 +3,76 @@ import { Platform } from 'react-native';
 import { PasskeyAndroid } from './PasskeyAndroid';
 import { PasskeyiOS } from './PasskeyiOS';
 
+const generateCreateRequest = (
+  userId: string,
+  userName: string,
+  challenge: string,
+  options: Partial<CreateOptions>
+): PasskeyRegistrationRequest => {
+  return {
+    challenge,
+    rp: {
+      id: 'https://getclave.io',
+      name: 'Clave',
+    },
+    user: {
+      id: userId,
+      name: userName,
+      displayName: userName,
+    },
+    pubKeyCredParams: [
+      { alg: -7, type: 'public-key' }, // ES256 (Webauthn's default algorithm)
+    ],
+    timeout: options.timeout ?? 60000,
+    authenticatorSelection: {
+      userVerification: options.userVerification ?? 'required', // Webauthn default is "preferred"
+      authenticatorAttachment: 'platform',
+      residentKey: options.discoverable ?? 'preferred', // official default is 'discouraged'
+      requireResidentKey: options.discoverable === 'required', // mainly for backwards compatibility, see https://www.w3.org/TR/webauthn/#dictionary-authenticatorSelection
+    },
+    attestation: options.attestation ? 'direct' : 'none',
+  };
+};
+
+const generateSignRequest = (
+  credentialIds: Array<string>,
+  challenge: string,
+  options: Partial<SignOptions>
+): PasskeyAuthenticationRequest => {
+  return {
+    challenge,
+    rpId: 'https://getclave.io',
+    allowCredentials: credentialIds.map((id) => {
+      return {
+        id,
+        type: 'public-key',
+        transports: ['hybrid', 'usb', 'ble', 'nfc'],
+      };
+    }),
+    userVerification: options.userVerification ?? 'required',
+    timeout: options.timeout ?? 60000,
+  };
+};
+
 export class Passkey {
+  public static async create(
+    userId: string,
+    userName: string,
+    challenge: string,
+    options: Partial<CreateOptions> = {}
+  ) {
+    if (!Passkey.isSupported) {
+      throw NotSupportedError;
+    }
+
+    const request = generateCreateRequest(userId, userName, challenge, options);
+
+    if (Platform.OS === 'android') {
+      return PasskeyAndroid.register(request);
+    }
+    return PasskeyiOS.register(request, options.withSecurityKey ?? false);
+  }
+
   /**
    * Creates a new Passkey
    *
@@ -26,6 +95,23 @@ export class Passkey {
       return PasskeyAndroid.register(request);
     }
     return PasskeyiOS.register(request, withSecurityKey);
+  }
+
+  public static async sign(
+    credentialIds: Array<string>,
+    challenge: string,
+    options: Partial<SignOptions> = {}
+  ) {
+    if (!Passkey.isSupported) {
+      throw NotSupportedError;
+    }
+
+    const request = generateSignRequest(credentialIds, challenge, options);
+
+    if (Platform.OS === 'android') {
+      return PasskeyAndroid.authenticate(request);
+    }
+    return PasskeyiOS.authenticate(request, options.withSecurityKey ?? false);
   }
 
   /**
@@ -151,4 +237,23 @@ export interface PasskeyAuthenticationResult {
     signature: string;
     userHandle: string;
   };
+}
+
+export interface CommonOptions {
+  userVerification: string;
+  authenticatorType: 'auto' | 'local' | 'extern' | 'roaming' | 'both';
+  timeout: number;
+  debug: boolean;
+}
+
+export interface CreateOptions extends CommonOptions {
+  userHandle: string;
+  attestation: boolean;
+  discoverable: string;
+  withSecurityKey: boolean;
+}
+
+export interface SignOptions extends CommonOptions {
+  mediation: 'optional' | 'conditional' | 'required' | 'silent';
+  withSecurityKey: boolean;
 }

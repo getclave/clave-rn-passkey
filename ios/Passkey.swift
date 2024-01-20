@@ -110,9 +110,18 @@ class Passkey: NSObject {
                     relyingPartyIdentifier: identifier)
                 let authRequest = platformProvider.createCredentialAssertionRequest(
                     challenge: challengeData)
-                print(allowedCredentials)
+                
                 if allowedCredentials.count > 0 {
-                    let credentials = allowedCredentials.compactMap { Data(base64Encoded: $0) }
+                    var credentials: [Data] = []
+                    for credential in allowedCredentials {
+                        guard let data = Data(base64Encoded: credential) else {
+                            reject( PassKeyError.invalidChallenge.rawValue,
+                                    PassKeyError.invalidChallenge.rawValue,
+                                    nil )
+                            return
+                        }
+                        credentials.append(data)
+                    }
                     authRequest.allowedCredentials = credentials.map {
                         ASAuthorizationPlatformPublicKeyCredentialDescriptor(
                             credentialID: $0)
