@@ -76,7 +76,7 @@ export class Passkey {
       throw NotSupportedError;
     }
 
-    const challengeBase64 = utils.toBase64(challenge);
+    const challengeBase64 = utils.toBase64Url(challenge);
 
     const request = this.generateCreateRequest(
       userId,
@@ -109,7 +109,7 @@ export class Passkey {
       throw NotSupportedError;
     }
 
-    const challengeBase64 = utils.toBase64(challenge);
+    const challengeBase64 = utils.toBase64Url(challenge);
 
     const request = this.generateSignRequest(
       credentialIds,
@@ -128,7 +128,7 @@ export class Passkey {
       );
     }
 
-    const base64Decoded = utils.fromBase64(authResponse.response.signature);
+    const base64Decoded = utils.fromBase64Url(authResponse.response.signature);
     const { r, s } = utils.derToRs(base64Decoded);
     return ['0x', r, s].join('');
   }
@@ -151,7 +151,7 @@ export class Passkey {
       throw NotSupportedError;
     }
 
-    const challengeBase64 = utils.toBase64(challenge);
+    const challengeBase64 = utils.toBase64Url(challenge);
 
     const request = this.generateSignRequest(
       credentialIds,
