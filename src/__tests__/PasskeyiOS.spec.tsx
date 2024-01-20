@@ -2,9 +2,6 @@
 import { Platform, NativeModules } from 'react-native';
 import { Passkey } from '../Passkey';
 
-import AuthRequest from './testData/AuthRequest.json';
-import RegRequest from './testData/RegRequest.json';
-
 import AuthiOSResult from './testData/AuthiOSResult.json';
 import RegiOSResult from './testData/RegiOSResult.json';
 
@@ -25,7 +22,7 @@ describe('Test Passkey Module', () => {
       .spyOn(NativeModules.Passkey, 'register')
       .mockResolvedValue(RegiOSResult);
 
-    await Passkey.register(RegRequest);
+    await Passkey.create('zet', 'zet', 'zet');
     expect(registerSpy).toHaveBeenCalled();
   });
 
@@ -34,7 +31,7 @@ describe('Test Passkey Module', () => {
       .spyOn(NativeModules.Passkey, 'authenticate')
       .mockResolvedValue(AuthiOSResult);
 
-    await Passkey.authenticate(AuthRequest);
+    await Passkey.sign(['zet'], 'zet');
     expect(authSpy).toHaveBeenCalled();
   });
 
@@ -43,9 +40,7 @@ describe('Test Passkey Module', () => {
       .spyOn(NativeModules.Passkey, 'register')
       .mockResolvedValue(RegiOSResult);
 
-    await Passkey.register(RegRequest, {
-      withSecurityKey: true,
-    });
+    await Passkey.create('zet', 'zet', 'zet');
     expect(registerSpy).toHaveBeenCalled();
   });
 
@@ -54,9 +49,7 @@ describe('Test Passkey Module', () => {
       .spyOn(NativeModules.Passkey, 'authenticate')
       .mockResolvedValue(AuthiOSResult);
 
-    await Passkey.authenticate(AuthRequest, {
-      withSecurityKey: true,
-    });
+    await Passkey.sign(['zet'], 'zet');
     expect(authSpy).toHaveBeenCalled();
   });
 });

@@ -71,7 +71,7 @@ export class Passkey {
     userName: string,
     challenge: string,
     options: Partial<CreateOptions> = {}
-  ) {
+  ): Promise<PasskeyRegistrationResult> {
     if (!Passkey.isSupported) {
       throw NotSupportedError;
     }
@@ -92,7 +92,7 @@ export class Passkey {
   }
 
   /**
-   * Authenticates using an existing Passkey
+   * Authenticates using an existing Passkey and returns signature only
    *
    * @param credentialIds The credential IDs of the Passkey to authenticate with
    * @param challenge The FIDO2 Challenge without formatting
@@ -104,7 +104,49 @@ export class Passkey {
     credentialIds: Array<string>,
     challenge: string,
     options: Partial<SignOptions> = {}
-  ) {
+  ): Promise<string> {
+    if (!Passkey.isSupported) {
+      throw NotSupportedError;
+    }
+
+    const challengeBase64 = utils.toBase64(challenge);
+
+    const request = this.generateSignRequest(
+      credentialIds,
+      challengeBase64,
+      options
+    );
+
+    let authResponse: PasskeyAuthenticationResult;
+
+    if (Platform.OS === 'android') {
+      authResponse = await PasskeyAndroid.authenticate(request);
+    } else {
+      authResponse = await PasskeyiOS.authenticate(
+        request,
+        options.withSecurityKey ?? false
+      );
+    }
+
+    const base64Decoded = utils.fromBase64(authResponse.response.signature);
+    const { r, s } = utils.derToRs(base64Decoded);
+    return ['0x', r, s].join('');
+  }
+
+  /**
+   * Authenticates using an existing Passkey and returns full response
+   *
+   * @param credentialIds The credential IDs of the Passkey to authenticate with
+   * @param challenge The FIDO2 Challenge without formatting
+   * @options An object containing options for the authentication process
+   * @returns The FIDO2 Assertion Result in JSON format
+   * @throws
+   */
+  public static async authenticate(
+    credentialIds: Array<string>,
+    challenge: string,
+    options: Partial<SignOptions> = {}
+  ): Promise<PasskeyAuthenticationResult> {
     if (!Passkey.isSupported) {
       throw NotSupportedError;
     }
@@ -119,8 +161,9 @@ export class Passkey {
 
     if (Platform.OS === 'android') {
       return PasskeyAndroid.authenticate(request);
+    } else {
+      return PasskeyiOS.authenticate(request, options.withSecurityKey ?? false);
     }
-    return PasskeyiOS.authenticate(request, options.withSecurityKey ?? false);
   }
 
   /**

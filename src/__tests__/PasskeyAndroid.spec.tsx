@@ -2,9 +2,6 @@
 import { Platform, NativeModules } from 'react-native';
 import { Passkey } from '../Passkey';
 
-import AuthRequest from './testData/AuthRequest.json';
-import RegRequest from './testData/RegRequest.json';
-
 import AuthAndroidResult from './testData/AuthAndroidResult.json';
 import RegAndroidResult from './testData/RegAndroidResult.json';
 
@@ -17,15 +14,15 @@ describe('Test Passkey Module', () => {
   test('should return unsupported for Android Versions below 28', async () => {
     (Platform as any).setVersion('26');
 
-    expect(await Passkey.isSupported()).toBeFalsy();
+    expect(Passkey.isSupported()).toBeFalsy();
   });
 
   test('should call native register method', async () => {
     const registerSpy = jest
-      .spyOn(NativeModules.Passkey, 'register')
+      .spyOn(NativeModules.Passkey, 'create')
       .mockResolvedValue(JSON.stringify(RegAndroidResult));
 
-    await Passkey.register(RegRequest);
+    await Passkey.create('zet', 'zet', 'zet');
     expect(registerSpy).toHaveBeenCalled();
   });
 
@@ -34,7 +31,7 @@ describe('Test Passkey Module', () => {
       .spyOn(NativeModules.Passkey, 'authenticate')
       .mockResolvedValue(JSON.stringify(AuthAndroidResult));
 
-    await Passkey.authenticate(AuthRequest);
+    await Passkey.sign(['zet'], 'zet');
     expect(authSpy).toHaveBeenCalled();
   });
 
@@ -43,9 +40,7 @@ describe('Test Passkey Module', () => {
       .spyOn(NativeModules.Passkey, 'register')
       .mockResolvedValue(JSON.stringify(RegAndroidResult));
 
-    await Passkey.register(RegRequest, {
-      withSecurityKey: true,
-    });
+    await Passkey.create('zet', 'zet', 'zet');
     expect(registerSpy).toHaveBeenCalled();
   });
 
@@ -54,9 +49,7 @@ describe('Test Passkey Module', () => {
       .spyOn(NativeModules.Passkey, 'authenticate')
       .mockResolvedValue(JSON.stringify(AuthAndroidResult));
 
-    await Passkey.authenticate(AuthRequest, {
-      withSecurityKey: true,
-    });
+    await Passkey.sign(['zet'], 'zet');
     expect(authSpy).toHaveBeenCalled();
   });
 });
