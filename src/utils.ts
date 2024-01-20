@@ -1,11 +1,11 @@
 import { Buffer } from 'buffer';
 
-export const fromBase64Url = (text: string) => {
+export const base64ToHex = (text: string) => {
   return Buffer.from(text, 'base64').toString('hex');
 };
 
-export const toBase64Url = (hex: string) => {
-  return Buffer.from(hex, 'hex').toString('base64url');
+export const hextoBase64 = (hex: string) => {
+  return Buffer.from(hex, 'hex').toString('base64');
 };
 
 /** Removes 0x from hex */
