@@ -2,59 +2,70 @@ import { NotSupportedError } from './PasskeyError';
 import { Platform } from 'react-native';
 import { PasskeyAndroid } from './PasskeyAndroid';
 import { PasskeyiOS } from './PasskeyiOS';
-
-const generateCreateRequest = (
-  userId: string,
-  userName: string,
-  challenge: string,
-  options: Partial<CreateOptions>
-): PasskeyRegistrationRequest => {
-  return {
-    challenge,
-    rp: {
-      id: 'https://getclave.io',
-      name: 'Clave',
-    },
-    user: {
-      id: userId,
-      name: userName,
-      displayName: userName,
-    },
-    pubKeyCredParams: [
-      { alg: -7, type: 'public-key' }, // ES256 (Webauthn's default algorithm)
-    ],
-    timeout: options.timeout ?? 60000,
-    authenticatorSelection: {
-      userVerification: options.userVerification ?? 'required', // Webauthn default is "preferred"
-      authenticatorAttachment: 'platform',
-      residentKey: options.discoverable ?? 'preferred', // official default is 'discouraged'
-      requireResidentKey: options.discoverable === 'required', // mainly for backwards compatibility, see https://www.w3.org/TR/webauthn/#dictionary-authenticatorSelection
-    },
-    attestation: options.attestation ? 'direct' : 'none',
-  };
-};
-
-const generateSignRequest = (
-  credentialIds: Array<string>,
-  challenge: string,
-  options: Partial<SignOptions>
-): PasskeyAuthenticationRequest => {
-  return {
-    challenge,
-    rpId: 'https://getclave.io',
-    allowCredentials: credentialIds.map((id) => {
-      return {
-        id,
-        type: 'public-key',
-        transports: ['hybrid', 'usb', 'ble', 'nfc'],
-      };
-    }),
-    userVerification: options.userVerification ?? 'required',
-    timeout: options.timeout ?? 60000,
-  };
-};
+import * as utils from './utils';
 
 export class Passkey {
+  static generateCreateRequest(
+    userId: string,
+    userName: string,
+    challenge: string,
+    options: Partial<CreateOptions>
+  ): PasskeyRegistrationRequest {
+    return {
+      challenge,
+      rp: {
+        id: 'getclave.io',
+        name: 'Clave',
+      },
+      user: {
+        id: userId,
+        name: userName,
+        displayName: userName,
+      },
+      pubKeyCredParams: [
+        { alg: -7, type: 'public-key' }, // ES256 (Webauthn's default algorithm)
+      ],
+      timeout: options.timeout ?? 60000,
+      authenticatorSelection: {
+        userVerification: options.userVerification ?? 'preferred',
+        authenticatorAttachment: 'platform',
+        residentKey: options.discoverable ?? 'preferred',
+        requireResidentKey: options.discoverable === 'required',
+      },
+      attestation: options.attestation ? 'direct' : 'none',
+    };
+  }
+
+  static generateSignRequest(
+    credentialIds: Array<string>,
+    challenge: string,
+    options: Partial<SignOptions>
+  ): PasskeyAuthenticationRequest {
+    return {
+      challenge,
+      rpId: 'getclave.io',
+      allowCredentials: credentialIds.map((id) => {
+        return {
+          id,
+          type: 'public-key',
+          transports: ['hybrid', 'usb', 'ble', 'nfc'],
+        };
+      }),
+      userVerification: options.userVerification ?? 'required',
+      timeout: options.timeout ?? 60000,
+    };
+  }
+
+  /**
+   * Creates a new Passkey
+   *
+   * @param userId The user's unique identifier
+   * @param userName The user's name
+   * @param challenge The FIDO2 Challenge without formatting
+   * @param options An object containing options for the registration process
+   * @returns The FIDO2 Attestation Result in JSON format
+   * @throws
+   */
   public static async create(
     userId: string,
     userName: string,
@@ -65,7 +76,14 @@ export class Passkey {
       throw NotSupportedError;
     }
 
-    const request = generateCreateRequest(userId, userName, challenge, options);
+    const challengeBase64 = utils.toBase64(challenge);
+
+    const request = this.generateCreateRequest(
+      userId,
+      userName,
+      challengeBase64,
+      options
+    );
 
     if (Platform.OS === 'android') {
       return PasskeyAndroid.register(request);
@@ -74,29 +92,14 @@ export class Passkey {
   }
 
   /**
-   * Creates a new Passkey
+   * Authenticates using an existing Passkey
    *
-   * @param request The FIDO2 Attestation Request in JSON format
-   * @param options An object containing options for the registration process
-   * @returns The FIDO2 Attestation Result in JSON format
+   * @param credentialIds The credential IDs of the Passkey to authenticate with
+   * @param challenge The FIDO2 Challenge without formatting
+   * @options An object containing options for the authentication process
+   * @returns The FIDO2 Assertion Result in JSON format
    * @throws
    */
-  public static async register(
-    request: PasskeyRegistrationRequest,
-    { withSecurityKey }: { withSecurityKey: boolean } = {
-      withSecurityKey: false,
-    }
-  ): Promise<PasskeyRegistrationResult> {
-    if (!Passkey.isSupported) {
-      throw NotSupportedError;
-    }
-
-    if (Platform.OS === 'android') {
-      return PasskeyAndroid.register(request);
-    }
-    return PasskeyiOS.register(request, withSecurityKey);
-  }
-
   public static async sign(
     credentialIds: Array<string>,
     challenge: string,
@@ -106,36 +109,18 @@ export class Passkey {
       throw NotSupportedError;
     }
 
-    const request = generateSignRequest(credentialIds, challenge, options);
+    const challengeBase64 = utils.toBase64(challenge);
+
+    const request = this.generateSignRequest(
+      credentialIds,
+      challengeBase64,
+      options
+    );
 
     if (Platform.OS === 'android') {
       return PasskeyAndroid.authenticate(request);
     }
     return PasskeyiOS.authenticate(request, options.withSecurityKey ?? false);
-  }
-
-  /**
-   * Authenticates using an existing Passkey
-   *
-   * @param request The FIDO2 Assertion Request in JSON format
-   * @param options An object containing options for the authentication process
-   * @returns The FIDO2 Assertion Result in JSON format
-   * @throws
-   */
-  public static async authenticate(
-    request: PasskeyAuthenticationRequest,
-    { withSecurityKey }: { withSecurityKey: boolean } = {
-      withSecurityKey: false,
-    }
-  ): Promise<PasskeyAuthenticationResult> {
-    if (!Passkey.isSupported) {
-      throw NotSupportedError;
-    }
-
-    if (Platform.OS === 'android') {
-      return PasskeyAndroid.authenticate(request);
-    }
-    return PasskeyiOS.authenticate(request, withSecurityKey);
   }
 
   /**
@@ -233,7 +218,7 @@ export interface PasskeyAuthenticationResult {
   type?: string;
   response: {
     authenticatorData: string;
-    clientDataJSON: string;
+    clientDataJSON: string; // Base64 and DER encoded
     signature: string;
     userHandle: string;
   };
